@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\RoomCategoryController;
 use App\Http\Controllers\HotelController;
+use App\Http\Controllers\MobileVerificationController;
 
 /*
 |--------------------------------------------------------------------------
@@ -17,7 +18,7 @@ use App\Http\Controllers\HotelController;
 */
 
 Route::get('/', function () {
-    return view('welcome');
+    return view('frontend.index');
 });
 
 Auth::routes();
@@ -48,3 +49,7 @@ Route::get('/hotels/{hotel}/edit', [HotelController::class, 'edit'])->name('hote
 Route::put('/hotels/{hotel}/update', [HotelController::class, 'update'])->name('hotels.update');
 Route::delete('/hotels/{hotel}/destroy', [HotelController::class, 'destroy'])->name('hotels.destroy');
 Route::get('/hotels/{hotel}', [HotelController::class, 'show'])->name('hotels.show');
+
+
+Route::get('/verify-mobile', [MobileVerificationController::class, 'showForm'])->name('frontend.verify.form');
+Route::get('/next-page', [MobileVerificationController::class, 'verifySuccess'])->name('next.page');
