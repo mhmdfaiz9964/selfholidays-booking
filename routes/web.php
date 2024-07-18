@@ -5,7 +5,8 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\RoomCategoryController;
 use App\Http\Controllers\HotelController;
 use App\Http\Controllers\MobileVerificationController;
-
+use App\Http\Controllers\BookingController; 
+use App\Http\Controllers\RoomPricingController; 
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -53,3 +54,6 @@ Route::get('/hotels/{hotel}', [HotelController::class, 'show'])->name('hotels.sh
 
 Route::get('/verify-mobile', [MobileVerificationController::class, 'showForm'])->name('frontend.verify.form');
 Route::get('/next-page', [MobileVerificationController::class, 'verifySuccess'])->name('next.page');
+Route::get('/hotel', [BookingController::class, 'index'])->name('hotel.index');
+Route::get('/hotels/{hotel}/room-pricings/create', [RoomPricingController::class, 'create'])->name('room_pricing.create');
+Route::post('/room-pricings/store', [RoomPricingController::class , 'store'])->name('room_pricing.store');

@@ -78,7 +78,7 @@
         window.confirmationResult.confirm(otp).then((result) => {
             const user = result.user;
             alert("Phone number verified!");
-            window.location.href = "{{ route('next.page') }}"; // Redirect to the next page after successful verification
+            window.location.href = "{{ route('hotels.index') }}"; // Redirect to the next page after successful verification
         }).catch((error) => {
             console.error(error);
             alert("Failed to verify OTP. Please try again.");

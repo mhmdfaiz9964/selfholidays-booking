@@ -36,4 +36,8 @@ class Hotels extends Model
     {
         return $this->belongsToMany(RoomCategory::class, 'hotel_room_category', 'hotel_id', 'room_category_id');
     }
+    public function roomPricings()
+    {
+        return $this->hasMany(RoomPricing::class, 'hotel_id');
+    }
 }

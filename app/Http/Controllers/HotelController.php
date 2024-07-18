@@ -7,7 +7,7 @@ use App\Models\Hotels;
 use App\Models\RoomCategory;
 use App\Models\Location;
 use Illuminate\Support\Facades\Storage;
-
+use App\Models\RoomPricing;
 class HotelController extends Controller
 {
     /**
@@ -172,7 +172,7 @@ class HotelController extends Controller
 
     public function show(Hotels $hotel)
     {
-        $hotel->load('location', 'roomCategories'); // Eager load relationships
+        $hotel->load('location', 'roomCategories' ,'roomPricings'); // Eager load relationships
         
         return view('admin.hotels.view', compact('hotel'));
     }
