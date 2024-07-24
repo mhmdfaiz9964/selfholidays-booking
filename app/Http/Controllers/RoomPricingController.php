@@ -15,10 +15,16 @@ class RoomPricingController extends Controller
     public function create(Hotels $hotel)
     {
         $roomCategories = RoomCategory::all();
-        $supplements = Supplement::all();
-
-        return view('admin.room_pricing.create', compact('hotel', 'roomCategories' ,'supplements'));
+        $supplements = Supplement::where('hotel_id', $hotel->id)->get(); // Fetch supplements related to the specific hotel
+    
+        // Retrieve pricing information if you need to display it
+        $pricing = Pricing::whereHas('hotelHasPricing', function($query) use ($hotel) {
+            $query->where('hotel_id', $hotel->id);
+        })->get();
+    
+        return view('admin.room_pricing.create', compact('hotel', 'roomCategories', 'supplements', 'pricing'));
     }
+    
 
     public function store(Request $request)
     {
@@ -38,9 +44,9 @@ class RoomPricingController extends Controller
             'supplements.*.supplement_id' => 'required|exists:supplements,id',
             'supplements.*.price' => 'required|numeric',
         ]);
-
+    
         $hotelId = $validatedData['hotel_id'];
-
+    
         foreach ($validatedData['pricing'] as $roomCategoryId => $pricingData) {
             if ($roomCategoryId) {
                 // Update or create pricing data
@@ -55,48 +61,46 @@ class RoomPricingController extends Controller
                         'family' => $pricingData['family'],
                     ]
                 );
-
+    
                 // Check if Pricing is created correctly
                 if (!$pricing) {
                     return redirect()->back()->withErrors(['error' => 'Failed to create or update pricing']);
                 }
-
+    
                 // Update or create hotel pricing data
                 HotelHasPricing::updateOrCreate(
                     [
                         'hotel_id' => $hotelId,
-                        'pricings_id' => $pricing->id
+                        'pricings_id' => $pricing->id // Ensure this is the correct column name
                     ],
                     [
                         'start_date' => $validatedData['start_period'],
                         'end_date' => $validatedData['end_period'],
                     ]
                 );
+    
+                // Process supplements
+                if (isset($validatedData['supplements'])) {
+                    foreach ($validatedData['supplements'] as $supplementData) {
+                        PricingHasSupplements::updateOrCreate(
+                            [
+                                'pricings_id' => $pricing->id, // Correctly use $pricing variable
+                                'supplements_id' => $supplementData['supplement_id']
+                            ],
+                            [
+                                'supplements_start_date' => $validatedData['start_period'], // Ensure this value is correct
+                                'supplements_end_date' => $validatedData['end_period'],   // Ensure this value is correct
+                                'supplements_price' => $supplementData['price']
+                            ]
+                        );
+                    }
+                }
             }
         }
-
-        // Process supplements
-        if (isset($validatedData['supplements'])) {
-            foreach ($validatedData['supplements'] as $supplementData) {
-                PricingHasSupplements::updateOrCreate(
-                    [
-                        'pricings_id' => $pricing->id, // Ensure this is the correct pricing ID
-                        'supplements_id' => $supplementData['supplement_id']
-                    ],
-                    [
-                        'supplements_start_date' => $validatedData['start_period'],
-                        'supplements_end_date' => $validatedData['end_period'],
-                        'supplements_price' => $supplementData['price']
-                    ]
-                );
-            }
-        }
-
+    
         return redirect()->route('hotels.index')
             ->with('success', 'Pricing and supplements information stored successfully.');
     }
-
-    
     
 
     public function edit($hotelId, $pricingId)
@@ -183,16 +187,17 @@ class RoomPricingController extends Controller
     public function destroy(Hotels $hotel, Pricing $pricing)
     {
         // Remove associated HotelHasPricing records
-        HotelHasPricing::where('pricing_id', $pricing->id)->delete();
-    
+        HotelHasPricing::where('pricings_id', $pricing->id)->delete();
+        
         // Remove associated SuplimentsHasPricing records
-        SuplimentsHasPricing::where('pricing_id', $pricing->id)->delete();
-    
+        PricingHasSupplements::where('pricings_id', $pricing->id)->delete();
+        
         // Delete the pricing record
         $pricing->delete();
-    
+        
         // Redirect to the pricing index page with a success message
-        return redirect()->route('hotels.show', $hotel->id)
+        return redirect()->route('hotels.index')
             ->with('success', 'Pricing deleted successfully.');
     }
+    
 }

@@ -59,7 +59,8 @@
                                                 <label for="supplement_id_{{ $supplement->id }}" class="col-md-2 col-form-label">{{ $supplement->title }}</label>
                                                 <div class="col-md-4">
                                                     <input type="hidden" name="supplements[{{ $supplement->id }}][supplement_id]" value="{{ $supplement->id }}">
-                                                    <input type="number" class="form-control" name="supplements[{{ $supplement->id }}][price]" placeholder="Price">
+                                                    <input type="number" class="form-control" name="supplements[{{ $supplement->id }}][price]" placeholder="Price" 
+                                                        value="{{ old("supplements.{$supplement->id}.price", $pricing->where('supplement_id', $supplement->id)->first()->price ?? '') }}">
                                                 </div>
                                                 <div class="col-md-6">
                                                     <!-- You can add additional fields or controls here if needed -->
@@ -69,6 +70,7 @@
                                     @endif
                                 </div>
                             </div>
+                            
                         <br>
                             <div class="form-group row mt-4">
                                 <div class="col-md-12 text-center">

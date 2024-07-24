@@ -19,6 +19,9 @@ class Hotels extends Model
         'sales_manager_name',
         'sales_manager_contact',
         'room_category_id',
+        'email',
+        'phone',
+        'pdf_urls',
     ];
 
     // Relationships
@@ -42,10 +45,10 @@ class Hotels extends Model
         return $this->hasMany(HotelHasPricing::class, 'hotel_id');
     }
 
-    public function supplements()
-    {
-        return $this->hasMany(Supplement::class, 'hotel_id');
-    }
+public function supplements()
+{
+    return $this->belongsToMany(Supplement::class, 'hotel_has_supplement', 'hotel_id', 'supplement_id');
+}
 
     public function pricingHasSupplements()
     {

@@ -62,3 +62,7 @@ Route::get('/hotels/{hotel}/pricing/{pricing}/edit', [RoomPricingController::cla
 Route::delete('/hotels/pricing/{pricing}', [RoomPricingController::class, 'destroy'])->name('room_pricing.destroy');
 Route::put('/hotels/{hotelId}/pricing/{pricingId}', [RoomPricingController::class, 'update'])
      ->name('room_pricing.update');
+Route::get('/hotel/{hotel}/booking', [BookingController::class, 'show'])->name('hotel.show');
+// Store the booking data
+Route::post('/booking', [BookingController::class, 'store'])->name('booking.store');
+Route::post('/calculate-price', [BookingController::class, 'calculatePrice'])->name('calculate.price');

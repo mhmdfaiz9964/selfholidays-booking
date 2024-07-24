@@ -25,4 +25,8 @@ class Supplement extends Model
         return $this->belongsToMany(Pricing::class, 'pricing_has_supplements', 'supplements_id', 'pricings_id')
                     ->withPivot('supplements_start_date', 'supplements_end_date', 'supplements_price');
     }
+    public function pricingHasSupplements()
+    {
+        return $this->hasMany(PricingHasSupplements::class, 'supplements_id');
+    }
 }

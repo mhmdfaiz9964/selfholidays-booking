@@ -29,10 +29,17 @@ class Pricing extends Model
     {
         return $this->hasMany(HotelHasPricing::class, 'pricings_id');
     }
-
+    public function hotelHasPricing()
+    {
+        return $this->hasMany(HotelHasPricing::class, 'pricings_id');
+    }
     public function supplements()
     {
         return $this->belongsToMany(Supplement::class, 'pricing_has_supplements', 'pricings_id', 'supplements_id')
                     ->withPivot('supplements_start_date', 'supplements_end_date', 'supplements_price');
+    }
+    public function pricingHasSupplements()
+    {
+        return $this->hasMany(PricingHasSupplements::class, 'pricings_id');
     }
 }

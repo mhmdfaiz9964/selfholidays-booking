@@ -44,7 +44,7 @@
                     </div>
 
                     <div class="form-group">
-                        <label for="room_category_id">Room Categories:</label>
+                        <label for="room_category_id">Room Type:</label>
                         <select name="room_category_id[]" id="room_category_id" class="form-control" multiple>
                             @foreach ($roomCategories as $category)
                                 <option value="{{ $category->id }}" {{ $hotel->roomCategories->contains($category->id) ? 'selected' : '' }}>{{ $category->title }}</option>
@@ -80,7 +80,20 @@
                         <label for="sales_manager_contact">Sales Manager Contact:</label>
                         <input type="text" name="sales_manager_contact" id="sales_manager_contact" class="form-control" value="{{ old('sales_manager_contact', $hotel->sales_manager_contact) }}">
                     </div>
+                    <div class="form-group">
+                        <label for="email">Email:</label>
+                        <input type="email" name="email" id="email" class="form-control" value="{{ old('email', $hotel->email) }}">
+                    </div>
 
+                    <div class="form-group">
+                        <label for="phone">Phone:</label>
+                        <input type="text" name="phone" id="phone" class="form-control" value="{{ old('phone', $hotel->phone) }}">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="group_of_company">Group of Company:</label>
+                        <input type="text" name="group_of_company" id="group_of_company" class="form-control" value="{{ old('group_of_company', $hotel->group_of_company) }}">
+                    </div>
                     <button type="submit" class="btn btn-primary">Update</button>
                     <a href="{{ route('hotels.index') }}" class="btn btn-secondary">Cancel</a>
                 </form>

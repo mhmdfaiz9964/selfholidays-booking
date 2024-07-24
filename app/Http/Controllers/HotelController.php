@@ -50,19 +50,32 @@ class HotelController extends Controller
             'description' => 'nullable|string',
             'image' => 'nullable|image|max:2048', // 2MB max size for image
             'group_of_company' => 'nullable|string',
+            'email' => 'nullable|email|max:255',
+            'phone' => 'nullable|string|max:20',
             'sales_manager_name' => 'nullable|string',
             'sales_manager_contact' => 'nullable|string',
             'room_category_id' => 'nullable|array',
             'room_category_id.*' => 'exists:room_categories,id',
+            'pdf_urls.*' => 'file|mimes:pdf|max:5048', // 2MB max size for PDFs
         ]);
-
+    
         // Handle image upload
         $imageName = null;
         if ($request->hasFile('image')) {
             $imageName = time() . '_' . $request->file('image')->getClientOriginalName();
             $request->file('image')->storeAs('public/hotel_images', $imageName);
         }
-
+    
+        // Handle PDF uploads
+        $pdfUrls = [];
+        if ($request->hasFile('pdf_urls')) {
+            foreach ($request->file('pdf_urls') as $pdf) {
+                $pdfName = time() . '_' . $pdf->getClientOriginalName();
+                $pdf->storeAs('public/hotel_pdfs', $pdfName);
+                $pdfUrls[] = 'hotel_pdfs/' . $pdfName;
+            }
+        }
+    
         // Create hotel
         $hotel = new Hotels();
         $hotel->name = $request->name;
@@ -73,17 +86,20 @@ class HotelController extends Controller
         $hotel->group_of_company = $request->group_of_company;
         $hotel->sales_manager_name = $request->sales_manager_name;
         $hotel->sales_manager_contact = $request->sales_manager_contact;
+        $hotel->email = $request->email;
+        $hotel->phone = $request->phone;
+        $hotel->pdf_urls = json_encode($pdfUrls); // Save PDFs as JSON
         $hotel->save();
-
+    
         // Attach room categories
         if ($request->has('room_category_id')) {
             $hotel->roomCategories()->attach($request->room_category_id);
         }
-
+    
         return redirect()->route('hotels.index')
             ->with('success', 'Hotel created successfully.');
     }
-
+    
     /**
      * Show the form for editing the specified hotel.
      *
@@ -114,6 +130,8 @@ class HotelController extends Controller
             'description' => 'nullable|string',
             'image' => 'nullable|image|max:2048', // 2MB max size for image
             'group_of_company' => 'nullable|string',
+            'email' => 'nullable|email|max:255',
+            'phone' => 'nullable|string|max:20',
             'sales_manager_name' => 'nullable|string',
             'sales_manager_contact' => 'nullable|string',
             'room_category_id' => 'nullable|array',
@@ -140,6 +158,8 @@ class HotelController extends Controller
         $hotel->group_of_company = $request->group_of_company;
         $hotel->sales_manager_name = $request->sales_manager_name;
         $hotel->sales_manager_contact = $request->sales_manager_contact;
+        $hotel->email = $request->email;
+        $hotel->phone = $request->phone;
         $hotel->save();
 
         // Sync room categories
@@ -174,15 +194,22 @@ class HotelController extends Controller
 
     public function show(Hotels $hotel)
     {
-        // Eager load relationships
-        $hotel->load('location', 'roomCategories', 'hotelHasPricing', 'pricingHasSupplements.supplement');
-    
-        // Get all pricing records associated with the hotel
-        $pricings = $hotel->hotelHasPricing->map(function($hotelPricing) {
-            return $hotelPricing->pricing; // Fetch associated Pricing model
+        // Eager load relationships including pricing and supplements
+        $hotel->load('location', 'roomCategories', 'hotelHasPricing.pricing.pricingHasSupplements.supplement');
+        
+        // Get all supplements associated with the hotel
+        $supplements = $hotel->hotelHasPricing->flatMap(function ($hotelPricing) {
+            return $hotelPricing->pricing->pricingHasSupplements->map(function ($pricingSupplement) {
+                return [
+                    'title' => $pricingSupplement->supplement->title,
+                    'price' => $pricingSupplement->supplements_price,
+                    'start_date' => $pricingSupplement->supplements_start_date,
+                    'end_date' => $pricingSupplement->supplements_end_date,
+                ];
+            });
         });
     
-        return view('admin.hotels.view', compact('hotel', 'pricings'));
+        return view('admin.hotels.view', compact('hotel', 'supplements'));
     }
 
     public function supplementsStore(Request $request)

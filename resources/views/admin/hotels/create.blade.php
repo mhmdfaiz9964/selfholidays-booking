@@ -18,7 +18,6 @@
                         </ul>
                     </div>
                 @endif
-
                 <form action="{{ route('hotels.store') }}" method="POST" enctype="multipart/form-data">
                     @csrf
 
@@ -43,9 +42,9 @@
                     </div>
 
                     <div class="form-group">
-                        <label for="room_category_id">Room Categories:</label>
+                        <label for="room_category_id">Room Type:</label>
                         <select name="room_category_id[]" id="room_category_id" class="form-control" multiple>
-                            <option value="">Select Room Categories</option>
+                            <option value="">Select Room Type</option>
                             @foreach ($roomCategories as $category)
                                 <option value="{{ $category->id }}">{{ $category->title }}</option>
                             @endforeach
@@ -66,6 +65,7 @@
                         <img id="preview-image" src="#" alt="Preview Image" style="max-width: 200px; display: none;">
                     </div>
 
+                    
                     <div class="form-group">
                         <label for="sales_manager_name">Sales Manager Name:</label>
                         <input type="text" name="sales_manager_name" id="sales_manager_name" class="form-control" value="{{ old('sales_manager_name') }}">
@@ -74,6 +74,29 @@
                     <div class="form-group">
                         <label for="sales_manager_contact">Sales Manager Contact:</label>
                         <input type="text" name="sales_manager_contact" id="sales_manager_contact" class="form-control" value="{{ old('sales_manager_contact') }}">
+                    </div>
+                    <div class="form-group">
+                        <label for="email">Email:</label>
+                        <input type="email" name="email" id="email" class="form-control" value="{{ old('email') }}">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="phone">Phone:</label>
+                        <input type="text" name="phone" id="phone" class="form-control" value="{{ old('phone') }}">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="group_of_company">Group of Company:</label>
+                        <input type="text" name="group_of_company" id="group_of_company" class="form-control" value="{{ old('group_of_company') }}">
+                    </div>
+                    <div class="form-group">
+                        <label for="pdfs">Attach PDFs</label>
+                        <input type="file" name="pdf_urls[]" id="pdf_urls" class="form-control" multiple>
+                        @if(isset($hotel) && $hotel->pdfs)
+                            @foreach(json_decode($hotel->pdfs) as $pdf)
+                                <a href="{{ asset('storage/' . $pdf) }}" target="_blank">{{ basename($pdf) }}</a><br>
+                            @endforeach
+                        @endif
                     </div>
 
                     <button type="submit" class="btn btn-primary">Create</button>
