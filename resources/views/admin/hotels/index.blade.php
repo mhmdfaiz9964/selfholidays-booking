@@ -46,7 +46,7 @@
                                                     @endif
                                                 @endfor
                                             </td>
-                                            <td>{{ $hotel->location->name }}</td>
+                                            <td>{{ $hotel->location->name ?? 'No Data' }}</td>
                                             <td>
                                                 @php
                                                     $categoriesCount = $hotel->roomCategories->count();

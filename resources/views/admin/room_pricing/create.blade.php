@@ -3,109 +3,80 @@
 @section('content')
     <div class="container">
         <div class="row">
-            <div class="col-md-8 offset-md-2">
+            <div class="col-md-12 offset-md-1">
                 <div class="card">
                     <div class="card-header">Add Room Pricing for {{ $hotel->name }}</div>
-
                     <div class="card-body">
-                        <!-- Your form for creating room pricing -->
-                        <form action="{{ route('room_pricing.store') }}" method="POST">
+                        <form action="{{ route('room_pricing.store', $hotel) }}" method="POST">
                             @csrf
-                            <!-- Hotel ID as hidden input -->
                             <input type="hidden" name="hotel_id" value="{{ $hotel->id }}">
-
-                            <!-- Room Category -->
-                            <div class="form-group">
-                                <label for="room_category_id">Room Category:</label>
-                                <select name="room_category_id" id="room_category_id" class="form-control">
-                                    @foreach ($roomCategories as $category)
-                                        <option value="{{ $category->id }}">{{ $category->title }}</option>
+                            
+                            <div class="form-group row">
+                                <label for="start_period" class="col-md-2 col-form-label">Start Period</label>
+                                <div class="col-md-4">
+                                    <input type="date" class="form-control" id="start_period" name="start_period" required>
+                                </div>
+                                <label for="end_period" class="col-md-2 col-form-label">End Period</label>
+                                <div class="col-md-4">
+                                    <input type="date" class="form-control" id="end_period" name="end_period" required>
+                                </div>
+                            </div>
+                        
+                            <table class="table table-bordered mt-4">
+                                <thead>
+                                    <tr>
+                                        <th>Type</th>
+                                        <th>Meal</th>
+                                        <th>SGL</th>
+                                        <th>DBL</th>
+                                        <th>TPL</th>
+                                        <th>Quartable</th>
+                                        <th>Family</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($hotel->roomCategories as $category)
+                                        <tr>
+                                            <td>{{ $category->title }}</td>
+                                            <td><input type="text" class="form-control" name="pricing[{{ $category->id }}][meal]" required></td>
+                                            <td><input type="number" class="form-control" name="pricing[{{ $category->id }}][sgl]" step="0.01"></td>
+                                            <td><input type="number" class="form-control" name="pricing[{{ $category->id }}][dbl]" step="0.01"></td>
+                                            <td><input type="number" class="form-control" name="pricing[{{ $category->id }}][tpl]" step="0.01"></td>
+                                            <td><input type="number" class="form-control" name="pricing[{{ $category->id }}][quartable]" step="0.01"></td>
+                                            <td><input type="number" class="form-control" name="pricing[{{ $category->id }}][family]" step="0.01"></td>
+                                        </tr>
                                     @endforeach
-                                </select>
-                            </div>
-
-                            <!-- Room Only Price -->
-                            <div class="form-group">
-                                <label for="room_only_price">Room Only Price:</label>
-                                <input type="text" name="room_only_price" id="room_only_price" class="form-control">
-                            </div>
-
-                            <!-- Date Range for Room Only -->
-                            <div class="form-group">
-                                <label>Date Range for Room Only:</label>
-                                <div class="input-daterange input-group" id="room_only_datepicker">
-                                    <input type="date" class="form-control" name="room_only_start_date" />
-                                    <div class="input-group-addon">to</div>
-                                    <input type="date" class="form-control" name="room_only_end_date" />
+                                </tbody>
+                            </table>
+                        
+                            <!-- Separate section for supplements pricing -->
+                            <div class="mt-4">
+                                <h4>Supplement Pricing</h4>
+                                <div id="supplements-section">
+                                    @if ($supplements->isNotEmpty())
+                                        @foreach($supplements as $supplement)
+                                            <div class="form-group row mt-3 supplement-row">
+                                                <label for="supplement_id_{{ $supplement->id }}" class="col-md-2 col-form-label">{{ $supplement->title }}</label>
+                                                <div class="col-md-4">
+                                                    <input type="hidden" name="supplements[{{ $supplement->id }}][supplement_id]" value="{{ $supplement->id }}">
+                                                    <input type="number" class="form-control" name="supplements[{{ $supplement->id }}][price]" placeholder="Price">
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <!-- You can add additional fields or controls here if needed -->
+                                                </div>
+                                            </div>
+                                        @endforeach
+                                    @endif
                                 </div>
                             </div>
-
-                            <!-- Bed and Breakfast Price -->
-                            <div class="form-group">
-                                <label for="bed_and_breakfast_price">Bed and Breakfast Price:</label>
-                                <input type="text" name="bed_and_breakfast_price" id="bed_and_breakfast_price" class="form-control">
-                            </div>
-
-                            <!-- Date Range for Bed and Breakfast -->
-                            <div class="form-group">
-                                <label>Date Range for Bed and Breakfast:</label>
-                                <div class="input-daterange input-group" id="bed_and_breakfast_datepicker">
-                                    <input type="date" class="form-control" name="bed_and_breakfast_start_date" />
-                                    <div class="input-group-addon">to</div>
-                                    <input type="date" class="form-control" name="bed_and_breakfast_end_date" />
+                        <br>
+                            <div class="form-group row mt-4">
+                                <div class="col-md-12 text-center">
+                                    <button type="submit" class="btn btn-primary">Create</button>
                                 </div>
                             </div>
-
-                            <!-- Half Board Price -->
-                            <div class="form-group">
-                                <label for="half_board_price">Half Board Price:</label>
-                                <input type="text" name="half_board_price" id="half_board_price" class="form-control">
-                            </div>
-
-                            <!-- Date Range for Half Board -->
-                            <div class="form-group">
-                                <label>Date Range for Half Board:</label>
-                                <div class="input-daterange input-group" id="half_board_datepicker">
-                                    <input type="date" class="form-control" name="half_board_start_date" />
-                                    <div class="input-group-addon">to</div>
-                                    <input type="date" class="form-control" name="half_board_end_date" />
-                                </div>
-                            </div>
-
-                            <!-- Full Board Price -->
-                            <div class="form-group">
-                                <label for="full_board_price">Full Board Price:</label>
-                                <input type="text" name="full_board_price" id="full_board_price" class="form-control">
-                            </div>
-
-                            <!-- Date Range for Full Board -->
-                            <div class="form-group">
-                                <label>Date Range for Full Board:</label>
-                                <div class="input-daterange input-group" id="full_board_datepicker">
-                                    <input type="date" class="form-control" name="full_board_start_date" />
-                                    <div class="input-group-addon">to</div>
-                                    <input type="date" class="form-control" name="full_board_end_date" />
-                                </div>
-                            </div>
-
-                            <!-- All Inclusive Price -->
-                            <div class="form-group">
-                                <label for="all_inclusive_price">All Inclusive Price:</label>
-                                <input type="text" name="all_inclusive_price" id="all_inclusive_price" class="form-control">
-                            </div>
-
-                            <!-- Date Range for All Inclusive -->
-                            <div class="form-group">
-                                <label>Date Range for All Inclusive:</label>
-                                <div class="input-daterange input-group" id="all_inclusive_datepicker">
-                                    <input type="date" class="form-control" name="all_inclusive_start_date" />
-                                    <div class="input-group-addon">to</div>
-                                    <input type="date" class="form-control" name="all_inclusive_end_date" />
-                                </div>
-                            </div>
-
-                            <button type="submit" class="btn btn-primary">Submit</button>
                         </form>
+                        
                     </div>
                 </div>
             </div>
@@ -114,13 +85,4 @@
 @endsection
 
 @section('scripts')
-    <script>
-        $(document).ready(function() {
-            $('.input-daterange').datepicker({
-                format: 'yyyy-mm-dd',
-                autoclose: true,
-                todayHighlight: true
-            });
-        });
-    </script>
 @endsection

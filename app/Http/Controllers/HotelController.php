@@ -7,7 +7,9 @@ use App\Models\Hotels;
 use App\Models\RoomCategory;
 use App\Models\Location;
 use Illuminate\Support\Facades\Storage;
-use App\Models\RoomPricing;
+use App\Models\Supplement;
+
+
 class HotelController extends Controller
 {
     /**
@@ -172,8 +174,30 @@ class HotelController extends Controller
 
     public function show(Hotels $hotel)
     {
-        $hotel->load('location', 'roomCategories' ,'roomPricings'); // Eager load relationships
-        
-        return view('admin.hotels.view', compact('hotel'));
+        // Eager load relationships
+        $hotel->load('location', 'roomCategories', 'hotelHasPricing', 'pricingHasSupplements.supplement');
+    
+        // Get all pricing records associated with the hotel
+        $pricings = $hotel->hotelHasPricing->map(function($hotelPricing) {
+            return $hotelPricing->pricing; // Fetch associated Pricing model
+        });
+    
+        return view('admin.hotels.view', compact('hotel', 'pricings'));
     }
+
+    public function supplementsStore(Request $request)
+    {
+        $request->validate([
+            'hotel_id' => 'required|exists:hotels,id',
+            'title' => 'required|string|max:255',
+        ]);
+
+        Supplement::create([
+            'hotel_id' => $request->hotel_id,
+            'title' => $request->title,
+        ]);
+
+        return redirect()->back()->with('success', 'Supplement added successfully.');
+    }
+    
 }

@@ -36,8 +36,20 @@ class Hotels extends Model
     {
         return $this->belongsToMany(RoomCategory::class, 'hotel_room_category', 'hotel_id', 'room_category_id');
     }
-    public function roomPricings()
+
+    public function hotelHasPricing()
     {
-        return $this->hasMany(RoomPricing::class, 'hotel_id');
+        return $this->hasMany(HotelHasPricing::class, 'hotel_id');
     }
+
+    public function supplements()
+    {
+        return $this->hasMany(Supplement::class, 'hotel_id');
+    }
+
+    public function pricingHasSupplements()
+    {
+        return $this->hasMany(PricingHasSupplements::class, 'supplements_id');
+    }
+    
 }

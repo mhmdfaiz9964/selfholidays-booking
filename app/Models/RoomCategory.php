@@ -14,5 +14,4 @@ class RoomCategory extends Model
         'description',
         'image',
     ];
-
 }

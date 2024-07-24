@@ -49,101 +49,138 @@
                                 @endif
                             </div>
                         </div>
+
+                        <!-- Pricing Table -->
+                        <div class="mt-4">
+                            <h5 class="card-title">Pricing Information</h5>
+                            <a href="{{ route('room_pricing.create', $hotel->id) }}" class="btn btn-success mb-3">Create Pricing</a>
+                            <a href="#" class="btn btn-primary mb-3" data-toggle="modal" data-target="#addSupplementModal">Add Supplement</a>
+                        <!-- Supplements Table -->
+                        <div class="mt-4">
+                            <table class="table table-bordered">
+                                <thead>
+                                    <tr>
+                                        <th>Supplement</th>
+                                        <th>Price</th>
+                                        <th>Valid From</th>
+                                        <th>Valid To</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach ($hotel->supplements as $supplement)
+                                        @foreach ($supplement->pricings as $pricing)
+                                            <tr>
+                                                <td>{{ $supplement->title }}</td>
+                                                <td>{{ $pricing->pivot->supplements_price }}</td>
+                                                <td>{{ $pricing->pivot->supplements_start_date }}</td>
+                                                <td>{{ $pricing->pivot->supplements_end_date }}</td>
+                                            </tr>
+                                        @endforeach
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                            <br>
+                            <table class="table table-bordered">
+                                <thead>
+                                    <tr>
+                                        <th>Room Type</th>
+                                        <th>Meal</th>
+                                        <th>SGL</th>
+                                        <th>DBL</th>
+                                        <th>TPL</th>
+                                        <th>Quartable</th>
+                                        <th>Family</th>
+                                        <th>Start Period</th>
+                                        <th>End Period</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach ($hotel->hotelHasPricing as $pricing)
+                                        <tr>
+                                            <td>{{ $pricing->pricing->roomCategory->title }}</td>
+                                            <td>{{ $pricing->pricing->meal }}</td>
+                                            <td>{{ $pricing->pricing->sgl }}</td>
+                                            <td>{{ $pricing->pricing->dbl }}</td>
+                                            <td>{{ $pricing->pricing->tpl }}</td>
+                                            <td>{{ $pricing->pricing->quartable }}</td>
+                                            <td>{{ $pricing->pricing->family }}</td>
+                                            <td>{{ $pricing->start_date }}</td>
+                                            <td>{{ $pricing->end_date }}</td>
+                                            <td>
+                                                <a href="{{ route('room_pricing.edit', ['hotel' => $hotel->id, 'pricing' => $pricing->id]) }}" class="btn btn-warning btn-sm">
+                                                    <i class="fas fa-edit"></i>
+                                                </a>
+                                                <form action="{{ route('room_pricing.destroy', $pricing->id) }}" method="POST" style="display:inline;" onsubmit="return confirmDelete()">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit" class="btn btn-danger btn-sm">
+                                                        <i class="fas fa-trash"></i>
+                                                    </button>
+                                                </form>
+                                            </td>
+                                            
+                                            <script>
+                                                function confirmDelete() {
+                                                    return confirm('Are you sure you want to delete this pricing?');
+                                                }
+                                            </script>
+                                            
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+
                         <a href="{{ route('hotels.index') }}" class="btn btn-primary mt-3">Back</a>
                     </div>
                 </div>
-                <div class="mt-4">
-                    <h5>Room Pricings</h5>
-                    <div class="mb-3">
-                        <a href="{{ route('room_pricing.create', $hotel->id) }}" class="btn btn-success"><i class="fas fa-plus-circle"></i> Add Pricing</a>
-                    </div>
-                    <div class="row">
-                        @foreach ($hotel->roomPricings as $pricing)
-                            <div class="col-12 mb-4">
-                                <div class="card border-primary">
-                                    <div class="card-header bg-primary text-white">
-                                        <h6>{{ $pricing->roomCategory->title }}</h6>
-                                    </div>
-                                    <div class="card-body">
-                                        <div class="row">
-                                            <div class="col-md-4 col-lg-4 mb-3">
-                                                <div class="card border-secondary">
-                                                    <div class="card-body">
-                                                        <p><strong>R/O Price:</strong> {{ $pricing->room_only_price }}</p>
-                                                        <p><strong><i class="fas fa-calendar-alt"></i> Date Range:</strong> {{ $pricing->room_only_start_date }} to {{ $pricing->room_only_end_date }}</p>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-4 col-lg-4 mb-3">
-                                                <div class="card border-secondary">
-                                                    <div class="card-body">
-                                                        <p><strong>B/B Price:</strong> {{ $pricing->bed_and_breakfast_price }}</p>
-                                                        <p><strong><i class="fas fa-calendar-alt"></i> Date Range:</strong> {{ $pricing->bed_and_breakfast_start_date }} to {{ $pricing->bed_and_breakfast_end_date }}</p>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-4 col-lg-4 mb-3">
-                                                <div class="card border-secondary">
-                                                    <div class="card-body">
-                                                        <p><strong>H/B Price:</strong> {{ $pricing->half_board_price }}</p>
-                                                        <p><strong><i class="fas fa-calendar-alt"></i> Date Range:</strong> {{ $pricing->half_board_start_date }} to {{ $pricing->half_board_end_date }}</p>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-4 col-lg-4 mb-3">
-                                                <div class="card border-secondary">
-                                                    <div class="card-body">
-                                                        <p><strong>F/B Price:</strong> {{ $pricing->full_board_price }}</p>
-                                                        <p><strong><i class="fas fa-calendar-alt"></i> Date Range:</strong> {{ $pricing->full_board_start_date }} to {{ $pricing->full_board_end_date }}</p>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-4 col-lg-4 mb-3">
-                                                <div class="card border-secondary">
-                                                    <div class="card-body">
-                                                        <p><strong>A/I Price:</strong> {{ $pricing->all_inclusive_price }}</p>
-                                                        <p><strong><i class="fas fa-calendar-alt"></i> Date Range:</strong> {{ $pricing->all_inclusive_start_date }} to {{ $pricing->all_inclusive_end_date }}</p>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="text-right">
-                                            {{-- Uncomment the following lines if edit and delete routes are defined --}}
-                                            {{-- <a href="{{ route('room_pricing.edit', ['hotelId' => $hotel->id, 'roomPricingId' => $pricing->id]) }}" class="btn btn-sm btn-primary"><i class="fas fa-edit"></i> Edit</a>
-                                            <form action="{{ route('room_pricing.destroy', ['hotelId' => $hotel->id, 'roomPricingId' => $pricing->id]) }}" method="POST" style="display: inline-block;">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this pricing?')"><i class="fas fa-trash-alt"></i> Delete</button>
-                                            </form> --}}
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        @endforeach
-                    </div>
-                </div>
-                
             </div>
         </div>
     </div>
+<!-- Modal for Adding Supplement -->
+<div class="modal" id="addSupplementModal" tabindex="-1" aria-labelledby="addSupplementModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addSupplementModalLabel">Add Supplement</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Form to Add Supplement -->
+                <form action="{{ route('supplements.store') }}" method="POST">
+                    @csrf
+                    <input type="hidden" name="hotel_id" value="{{ $hotel->id }}">
+                    <div class="mb-3">
+                        <label for="title" class="form-label">Supplement Title</label>
+                        <input type="text" class="form-control" id="title" name="title" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Save</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
 @endsection
+
 <style>
     .card {
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-}
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
 
-.card-header {
-    background-color: #007bff;
-    color: #fff;
-}
+    .card-header {
+        background-color: #007bff;
+        color: #fff;
+    }
 
-.card-body p {
-    margin-bottom: 0.5rem;
-}
+    .card-body p {
+        margin-bottom: 0.5rem;
+    }
 
-.text-right a,
-.text-right button {
-    margin-left: 0.5rem;
-}
-
-    </style>
+    .text-right a,
+    .text-right button {
+        margin-left: 0.5rem;
+    }
+</style>

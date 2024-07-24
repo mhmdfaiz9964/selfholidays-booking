@@ -50,6 +50,7 @@ Route::get('/hotels/{hotel}/edit', [HotelController::class, 'edit'])->name('hote
 Route::put('/hotels/{hotel}/update', [HotelController::class, 'update'])->name('hotels.update');
 Route::delete('/hotels/{hotel}/destroy', [HotelController::class, 'destroy'])->name('hotels.destroy');
 Route::get('/hotels/{hotel}', [HotelController::class, 'show'])->name('hotels.show');
+Route::post('/supplements', [HotelController::class, 'supplementsStore'])->name('supplements.store');
 
 
 Route::get('/verify-mobile', [MobileVerificationController::class, 'showForm'])->name('frontend.verify.form');
@@ -57,3 +58,7 @@ Route::get('/next-page', [MobileVerificationController::class, 'verifySuccess'])
 Route::get('/hotel', [BookingController::class, 'index'])->name('hotel.index');
 Route::get('/hotels/{hotel}/room-pricings/create', [RoomPricingController::class, 'create'])->name('room_pricing.create');
 Route::post('/room-pricings/store', [RoomPricingController::class , 'store'])->name('room_pricing.store');
+Route::get('/hotels/{hotel}/pricing/{pricing}/edit', [RoomPricingController::class, 'edit'])->name('room_pricing.edit');
+Route::delete('/hotels/pricing/{pricing}', [RoomPricingController::class, 'destroy'])->name('room_pricing.destroy');
+Route::put('/hotels/{hotelId}/pricing/{pricingId}', [RoomPricingController::class, 'update'])
+     ->name('room_pricing.update');
