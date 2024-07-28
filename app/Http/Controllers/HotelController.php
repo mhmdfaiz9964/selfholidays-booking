@@ -7,7 +7,10 @@ use App\Models\Hotels;
 use App\Models\RoomCategory;
 use App\Models\Location;
 use Illuminate\Support\Facades\Storage;
+use Barryvdh\DomPDF\Facade\Pdf;
+use App\Models\Meal;
 use App\Models\Supplement;
+use App\Models\Pricing;
 
 
 class HotelController extends Controller
@@ -194,37 +197,102 @@ class HotelController extends Controller
 
     public function show(Hotels $hotel)
     {
-        // Eager load relationships including pricing and supplements
-        $hotel->load('location', 'roomCategories', 'hotelHasPricing.pricing.pricingHasSupplements.supplement');
+        // Fetch supplements and meals associated with the hotel
+        $supplements = $hotel->supplements;
+        $meals = $hotel->meals;
         
-        // Get all supplements associated with the hotel
-        $supplements = $hotel->hotelHasPricing->flatMap(function ($hotelPricing) {
-            return $hotelPricing->pricing->pricingHasSupplements->map(function ($pricingSupplement) {
-                return [
-                    'title' => $pricingSupplement->supplement->title,
-                    'price' => $pricingSupplement->supplements_price,
-                    'start_date' => $pricingSupplement->supplements_start_date,
-                    'end_date' => $pricingSupplement->supplements_end_date,
-                ];
-            });
-        });
-    
-        return view('admin.hotels.view', compact('hotel', 'supplements'));
+        // Fetch pricing information for meals specific to this hotel
+        $mealPricings = Pricing::where('hotel_id', $hotel->id)
+            ->whereNotNull('meals_id') // Ensure only records with meals_id are considered
+            ->get();
+        
+        // Fetch pricing information for supplements specific to this hotel
+        $supplementPricings = Pricing::where('hotel_id', $hotel->id)
+            ->whereNotNull('supplement_prices') // Ensure only records with supplement_prices are considered
+            ->get();
+        
+        return view('admin.hotels.view', compact('hotel', 'supplements', 'meals', 'mealPricings', 'supplementPricings'));
     }
+    
+    
+    public function fetchSupplements($hotelId)
+    {
+        // Fetch the hotel by ID
+        $hotel = Hotels::find($hotelId);
+    
+        // Check if the hotel exists
+        if (!$hotel) {
+            return response()->json(['error' => 'Hotel not found.'], 404);
+        }
+    
+        // Fetch supplements assigned to the hotel
+        $supplements = $hotel->supplements;
+    
+        // Return the supplements as JSON
+        return response()->json($supplements);
+    }
+    
 
-    public function supplementsStore(Request $request)
+    // Store a new supplement
+    public function storeSupplement(Request $request)
     {
         $request->validate([
-            'hotel_id' => 'required|exists:hotels,id',
             'title' => 'required|string|max:255',
+            'hotel_id' => 'required|integer|exists:hotels,id', // Assuming you need a hotel_id
         ]);
 
-        Supplement::create([
-            'hotel_id' => $request->hotel_id,
-            'title' => $request->title,
-        ]);
+        $supplement = new Supplement();
+        $supplement->title = $request->title;
+        $supplement->hotel_id = $request->hotel_id; // Assuming hotel_id is required
+        $supplement->save();
 
-        return redirect()->back()->with('success', 'Supplement added successfully.');
+        return response()->json(['success' => 'Supplement created successfully.']);
     }
-    
+
+    // Delete a supplement
+    public function destroySupplement($id)
+    {
+        try {
+            $supplement = Supplement::findOrFail($id);
+            $supplement->delete();
+            return response()->json(['success' => 'Supplement deleted successfully.']);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'An error occurred: ' . $e->getMessage()], 500);
+        }
+    }
+
+    // Fetch all meals
+    public function fetchMeals()
+    {
+        $meals = Meal::all();
+        return response()->json($meals);
+    }
+
+    // Store a new meal
+    public function storeMeal(Request $request)
+    {
+        $request->validate([
+            'title' => 'required|string|max:255',
+            'hotel_id' => 'required|integer|exists:hotels,id', // Assuming you need a hotel_id
+        ]);
+
+        $meal = new Meal();
+        $meal->title = $request->title;
+        $meal->hotel_id = $request->hotel_id; // Assuming hotel_id is required
+        $meal->save();
+
+        return response()->json(['success' => 'Meal created successfully.']);
+    }
+
+    // Delete a meal
+    public function destroyMeal($id)
+    {
+        try {
+            $meal = Meal::findOrFail($id);
+            $meal->delete();
+            return response()->json(['success' => 'Meal deleted successfully.']);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'An error occurred: ' . $e->getMessage()], 500);
+        }
+    }
 }

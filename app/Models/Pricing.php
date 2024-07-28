@@ -10,36 +10,27 @@ class Pricing extends Model
     use HasFactory;
 
     protected $fillable = [
-        'room_category_id',
-        'meal',
-        'sgl',
-        'dbl',
-        'tpl',
-        'quartable',
-        'family',
+        'hotel_id', 'supplements_id', 'meals_id', 'type', 'sgl', 'dbl', 'tpl', 'Quartable', 'Family', 'Start_date', 'End_date' ,'special_offer' ,'supplement_prices',
     ];
 
-    // Relationships
-    public function roomCategory()
+    protected $casts = [
+        'supplements_id' => 'array',
+        'meals_id' => 'array',
+        'supplement_prices' => 'array',
+    ];
+
+    public function hotel()
     {
-        return $this->belongsTo(RoomCategory::class, 'room_category_id');
+        return $this->belongsTo(Hotel::class);
     }
 
-    public function hotels()
+    public function meals()
     {
-        return $this->hasMany(HotelHasPricing::class, 'pricings_id');
+        return $this->belongsToMany(Meal::class, 'meal_pricing', 'pricing_id', 'meal_id');
     }
-    public function hotelHasPricing()
-    {
-        return $this->hasMany(HotelHasPricing::class, 'pricings_id');
-    }
+
     public function supplements()
     {
-        return $this->belongsToMany(Supplement::class, 'pricing_has_supplements', 'pricings_id', 'supplements_id')
-                    ->withPivot('supplements_start_date', 'supplements_end_date', 'supplements_price');
-    }
-    public function pricingHasSupplements()
-    {
-        return $this->hasMany(PricingHasSupplements::class, 'pricings_id');
+        return $this->belongsToMany(Supplement::class, 'supplement_pricing', 'pricing_id', 'supplement_id');
     }
 }

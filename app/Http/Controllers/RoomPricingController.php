@@ -5,101 +5,92 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Hotels;
 use App\Models\RoomCategory;
+use App\Models\Meal;
 use App\Models\Pricing;
-use App\Models\HotelHasPricing;
 use App\Models\Supplement;
-use App\Models\PricingHasSupplements;
+
 
 class RoomPricingController extends Controller
 {
     public function create(Hotels $hotel)
     {
-        $roomCategories = RoomCategory::all();
-        $supplements = Supplement::where('hotel_id', $hotel->id)->get(); // Fetch supplements related to the specific hotel
+        // Fetch supplements assigned to the hotel
+        $supplements = $hotel->supplements;
     
-        // Retrieve pricing information if you need to display it
-        $pricing = Pricing::whereHas('hotelHasPricing', function($query) use ($hotel) {
-            $query->where('hotel_id', $hotel->id);
-        })->get();
+        // Fetch meals assigned to the hotel
+        $meals = $hotel->meals;
     
-        return view('admin.room_pricing.create', compact('hotel', 'roomCategories', 'supplements', 'pricing'));
+        // Fetch existing pricing data for the hotel, if any
+        $pricing = Pricing::where('hotel_id', $hotel->id)
+            ->whereBetween('start_date', [now(), now()->addDays(30)]) // Adjust the date range as needed
+            ->get()
+            ->keyBy('supplement_id'); // Key by supplement_id to easily access it later
+    
+        // Pass the hotel, supplements, meals, and pricing to the view
+        return view('admin.room_pricing.create', compact('hotel', 'supplements', 'meals', 'pricing'));
     }
     
-
+    
     public function store(Request $request)
     {
-        // Validate the input data
-        $validatedData = $request->validate([
+        // Validate the request
+        $request->validate([
             'hotel_id' => 'required|exists:hotels,id',
-            'start_period' => 'required|date',
-            'end_period' => 'required|date',
-            'pricing' => 'required|array',
-            'pricing.*.meal' => 'required|string|max:255',
+            'Start_date' => 'nullable|date',
+            'End_date' => 'nullable|date|after_or_equal:Start_date',
             'pricing.*.sgl' => 'nullable|numeric',
             'pricing.*.dbl' => 'nullable|numeric',
             'pricing.*.tpl' => 'nullable|numeric',
             'pricing.*.quartable' => 'nullable|numeric',
             'pricing.*.family' => 'nullable|numeric',
-            'supplements' => 'nullable|array',
-            'supplements.*.supplement_id' => 'required|exists:supplements,id',
-            'supplements.*.price' => 'required|numeric',
+            'supplements.*.price' => 'nullable|numeric',
+            'special_offer' => 'nullable|in:enable,disable' // Validate special_offer
         ]);
     
-        $hotelId = $validatedData['hotel_id'];
+        // Extract values from the request
+        $hotel_id = $request->input('hotel_id');
+        $start_date = $request->input('Start_date');
+        $end_date = $request->input('End_date');
+        $special_offer = $request->input('special_offer', 'disable');
     
-        foreach ($validatedData['pricing'] as $roomCategoryId => $pricingData) {
-            if ($roomCategoryId) {
-                // Update or create pricing data
-                $pricing = Pricing::updateOrCreate(
-                    ['room_category_id' => $roomCategoryId],
-                    [
-                        'meal' => $pricingData['meal'],
-                        'sgl' => $pricingData['sgl'],
-                        'dbl' => $pricingData['dbl'],
-                        'tpl' => $pricingData['tpl'],
-                        'quartable' => $pricingData['quartable'],
-                        'family' => $pricingData['family'],
-                    ]
-                );
-    
-                // Check if Pricing is created correctly
-                if (!$pricing) {
-                    return redirect()->back()->withErrors(['error' => 'Failed to create or update pricing']);
-                }
-    
-                // Update or create hotel pricing data
-                HotelHasPricing::updateOrCreate(
-                    [
-                        'hotel_id' => $hotelId,
-                        'pricings_id' => $pricing->id // Ensure this is the correct column name
-                    ],
-                    [
-                        'start_date' => $validatedData['start_period'],
-                        'end_date' => $validatedData['end_period'],
-                    ]
-                );
-    
-                // Process supplements
-                if (isset($validatedData['supplements'])) {
-                    foreach ($validatedData['supplements'] as $supplementData) {
-                        PricingHasSupplements::updateOrCreate(
-                            [
-                                'pricings_id' => $pricing->id, // Correctly use $pricing variable
-                                'supplements_id' => $supplementData['supplement_id']
-                            ],
-                            [
-                                'supplements_start_date' => $validatedData['start_period'], // Ensure this value is correct
-                                'supplements_end_date' => $validatedData['end_period'],   // Ensure this value is correct
-                                'supplements_price' => $supplementData['price']
-                            ]
-                        );
-                    }
-                }
-            }
+        // Store pricing information for meals
+        foreach ($request->input('pricing', []) as $meal_id => $prices) {
+            Pricing::updateOrCreate(
+                [
+                    'hotel_id' => $hotel_id,
+                    'meals_id' => $meal_id, // Use meals_id
+                    'Start_date' => $start_date,
+                    'End_date' => $end_date,
+                ],
+                array_merge([
+                    'type' => 'Standard',
+                    'special_offer' => $special_offer
+                ], $prices)
+            );
         }
     
-        return redirect()->route('hotels.index')
-            ->with('success', 'Pricing and supplements information stored successfully.');
+        // Prepare supplement prices and IDs as JSON
+        $supplement_data = [];
+        foreach ($request->input('supplements', []) as $supplement_id => $supplement) {
+            $supplement_data[$supplement_id] = $supplement['price'];
+        }
+    
+        // Store supplement prices
+        Pricing::updateOrCreate(
+            [
+                'hotel_id' => $hotel_id,
+                'Start_date' => $start_date,
+                'End_date' => $end_date,
+            ],
+            [
+                'type' => 'Standard',
+                'special_offer' => $special_offer,
+                'supplement_prices' => json_encode($supplement_data) // Save supplement prices as JSON
+            ]
+        );
+    
+        return redirect()->route('hotels.show', $hotel_id)
+                         ->with('success', 'Room pricing added successfully.');
     }
     
 

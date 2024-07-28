@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Supplement extends Model
+class Meal extends Model
 {
     use HasFactory;
 
@@ -18,6 +18,6 @@ class Supplement extends Model
 
     public function pricings()
     {
-        return $this->belongsToMany(Pricing::class, 'supplement_pricing', 'supplement_id', 'pricing_id');
+        return $this->belongsToMany(Pricing::class, 'meal_pricing', 'meal_id', 'pricing_id');
     }
 }

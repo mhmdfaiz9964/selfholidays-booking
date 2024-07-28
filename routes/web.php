@@ -50,8 +50,15 @@ Route::get('/hotels/{hotel}/edit', [HotelController::class, 'edit'])->name('hote
 Route::put('/hotels/{hotel}/update', [HotelController::class, 'update'])->name('hotels.update');
 Route::delete('/hotels/{hotel}/destroy', [HotelController::class, 'destroy'])->name('hotels.destroy');
 Route::get('/hotels/{hotel}', [HotelController::class, 'show'])->name('hotels.show');
-Route::post('/supplements', [HotelController::class, 'supplementsStore'])->name('supplements.store');
-
+Route::get('supplements/create', [HotelController::class, 'createSupplement'])->name('supplements.create');
+Route::post('supplements', [HotelController::class, 'storeSupplement'])->name('supplements.store');
+Route::get('meals/create', [HotelController::class, 'createMeal'])->name('meals.create');
+Route::post('meals', [HotelController::class, 'storeMeal'])->name('meals.store');
+Route::get('meals/fetch', [HotelController::class, 'fetchMeals'])->name('meals.fetch');
+Route::get('supplements/fetch', [HotelController::class, 'fetchSupplements'])->name('supplements.fetch');
+Route::delete('/supplements/{id}', [HotelController::class, 'destroySupplement'])->name('supplements.destroy');
+Route::delete('/meals/{id}', [HotelController::class, 'destroyMeal'])->name('meals.destroy');
+Route::post('/store-supplements', [RoomPricingController::class, 'storeSupplements'])->name('store.supplements');
 
 Route::get('/verify-mobile', [MobileVerificationController::class, 'showForm'])->name('frontend.verify.form');
 Route::get('/next-page', [MobileVerificationController::class, 'verifySuccess'])->name('next.page');
@@ -63,6 +70,5 @@ Route::delete('/hotels/pricing/{pricing}', [RoomPricingController::class, 'destr
 Route::put('/hotels/{hotelId}/pricing/{pricingId}', [RoomPricingController::class, 'update'])
      ->name('room_pricing.update');
 Route::get('/hotel/{hotel}/booking', [BookingController::class, 'show'])->name('hotel.show');
-// Store the booking data
 Route::post('/booking', [BookingController::class, 'store'])->name('booking.store');
-Route::post('/calculate-price', [BookingController::class, 'calculatePrice'])->name('calculate.price');
+Route::get('/hotel/pdf/{id}', [HotelController::class, 'viewPdf'])->name('hotel.pdf');

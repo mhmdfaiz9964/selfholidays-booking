@@ -9,7 +9,7 @@
             <p class="text-lg mb-6">Book the perfect Wander with inspiring views, modern workstations, restful beds, hotel-grade cleaning, and 24/7 concierge service. It's a vacation home, but better.</p>
             <div class="flex flex-col space-y-4 sm:flex-row sm:space-y-0 sm:space-x-4">
                 <a href="#" class="px-8 py-3 bg-orange-500 text-white border border-white rounded hover:bg-orange-600 transition">OUR ROOMS</a>
-                <a href="{{ route('frontend.verify.form') }}" class="px-8 py-3 bg-white text-black rounded hover:bg-gray-200 transition">BOOK A ROOM</a>                
+                <a href="{{ route('hotels.index') }}" class="px-8 py-3 bg-white text-black rounded hover:bg-gray-200 transition">BOOK A ROOM</a>                
             </div>
         </div>
         <div class="md:w-1/2 flex justify-center md:justify-center">

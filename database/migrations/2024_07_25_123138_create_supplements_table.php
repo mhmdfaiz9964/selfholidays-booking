@@ -10,8 +10,8 @@ class CreateSupplementsTable extends Migration
     {
         Schema::create('supplements', function (Blueprint $table) {
             $table->id();
-            $table->string('title');
-            $table->unsignedBigInteger('hotel_id');
+            $table->string('title', 255);
+            $table->foreignId('hotel_id')->constrained('hotels')->onDelete('cascade');
             $table->timestamps();
         });
     }

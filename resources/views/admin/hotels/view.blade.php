@@ -53,56 +53,92 @@
                                 @endif
                             </div>
                         </div>
-                        <div class="mt-4">
-                            @if($hotel->pdf_urls)
-                                @php
-                                    $pdfUrls = json_decode($hotel->pdf_urls);
-                                @endphp
-                                @if(is_array($pdfUrls))
-                                    <div class="pdf-buttons">
-                                        @foreach($pdfUrls as $pdfUrl)
-                                            <a href="{{ $pdfUrl }}" class="btn btn-primary" download>
-                                                <i class="fas fa-file-pdf"></i> Download PDF
-                                            </a>
-                                        @endforeach
-                                    </div>
-                                @endif
-                            @endif
+                        @if(!empty($hotel->pdf_urls) && is_array($hotel->pdf_urls))
+                            @foreach($hotel->pdf_urls as $pdfUrl)
+                                    <button class="btn btn-outline-danger" onclick="openModal('{{ asset('storage/' . $pdfUrl) }}')">View PDF {{ basename($pdfUrl) }}</button>
+                            @endforeach
+                    @else
+                        <p>No PDFs available.</p>
+                    @endif
+                
+                    <!-- The Modal -->
+                    <div id="pdfModal" class="modal">
+                        <div class="modal-content">
+                            <span class="close" onclick="closeModal()">&times;</span>
+                            <iframe id="pdfViewer" src="" frameborder="0"></iframe>
                         </div>
+                    </div>
+                
+                    <script>
+                        // Function to open the modal
+                        function openModal(pdfUrl) {
+                            var modal = document.getElementById('pdfModal');
+                            var iframe = document.getElementById('pdfViewer');
+                            iframe.src = pdfUrl;
+                            modal.style.display = 'block';
+                        }
+                
+                        // Function to close the modal
+                        function closeModal() {
+                            var modal = document.getElementById('pdfModal');
+                            modal.style.display = 'none';
+                        }
+                
+                        // Close the modal if the user clicks anywhere outside of the modal
+                        window.onclick = function(event) {
+                            var modal = document.getElementById('pdfModal');
+                            if (event.target == modal) {
+                                modal.style.display = 'none';
+                            }
+                        }
+                    </script>
                         <!-- Pricing Table -->
                         <div class="mt-4">
                             <h5 class="card-title">Pricing Information</h5>
                             <a href="{{ route('room_pricing.create', $hotel->id) }}" class="btn btn-success mb-3">Create Pricing</a>
                             <a href="#" class="btn btn-primary mb-3" data-toggle="modal" data-target="#addSupplementModal">Add Supplement</a>
-                        <!-- Supplements Table -->
-                        <div class="mt-4">
-                            <table class="table table-bordered">
-                                <thead>
-                                    <tr>
-                                        <th>Supplement</th>
-                                        <th>Price</th>
-                                        <th>Valid From</th>
-                                        <th>Valid To</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach ($supplements as $supplement)
-                                    <tr>
-                                        <td>{{ $supplement['title'] }}</td>
-                                        <td>{{ $supplement['price'] }}</td>
-                                        <td>{{ $supplement['start_date'] }}</td>
-                                        <td>{{ $supplement['end_date'] }}</td>
-                                    </tr>
-                                @endforeach
-                                </tbody>
-                            </table>
-                        </div>
+                            <a href="#" class="btn btn-info mb-3" data-toggle="modal" data-target="#addMealModal">Create Meal</a>
+
                             <br>
+                            <div class="row">
+                                {{-- <!-- Supplements Table -->
+                                <div class="col-md-6">
+                                    <h5 class="card-title mt-4">Supplements</h5>
+                                    <table class="table table-striped">
+                                        <thead>
+                                            <tr>
+                                                <th>Title</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="supplementTableBody">
+                                            <!-- Supplements will be loaded here -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                        
+                                <!-- Meals Table -->
+                                <div class="col-md-6">
+                                    <h5 class="card-title mt-4">Meals</h5>
+                                    <table class="table table-striped">
+                                        <thead>
+                                            <tr>
+                                                <th>Title</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="mealTableBody">
+                                            <!-- Meals will be loaded here -->
+                                        </tbody>
+                                    </table> --}}
+                                </div>
+                            </div>
+                            <hr>
+                            @if ($mealPricings->count())
                             <table class="table table-bordered">
                                 <thead>
                                     <tr>
-                                        <th>Room Type</th>
-                                        <th>Meal</th>
+                                        <th>Meal Name</th>
                                         <th>SGL</th>
                                         <th>DBL</th>
                                         <th>TPL</th>
@@ -110,78 +146,271 @@
                                         <th>Family</th>
                                         <th>Start Period</th>
                                         <th>End Period</th>
-                                        <th>Action</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    @foreach ($hotel->hotelHasPricing as $pricing)
-                                        <tr>
-                                            <td>{{ $pricing->pricing->roomCategory->title }}</td>
-                                            <td>{{ $pricing->pricing->meal }}</td>
-                                            <td>{{ $pricing->pricing->sgl }}</td>
-                                            <td>{{ $pricing->pricing->dbl }}</td>
-                                            <td>{{ $pricing->pricing->tpl }}</td>
-                                            <td>{{ $pricing->pricing->quartable }}</td>
-                                            <td>{{ $pricing->pricing->family }}</td>
-                                            <td>{{ $pricing->start_date }}</td>
-                                            <td>{{ $pricing->end_date }}</td>
-                                            <td>
-                                                <a href="{{ route('room_pricing.edit', ['hotel' => $hotel->id, 'pricing' => $pricing->id]) }}" class="btn btn-warning btn-sm">
-                                                    <i class="fas fa-edit"></i>
-                                                </a>
-                                                <form action="{{ route('room_pricing.destroy', $pricing->id) }}" method="POST" style="display:inline;" onsubmit="return confirmDelete()">
-                                                    @csrf
-                                                    @method('DELETE')
-                                                    <button type="submit" class="btn btn-danger btn-sm">
-                                                        <i class="fas fa-trash"></i>
-                                                    </button>
-                                                </form>
-                                            </td>
-                                            
-                                            <script>
-                                                function confirmDelete() {
-                                                    return confirm('Are you sure you want to delete this pricing?');
-                                                }
-                                            </script>
-                                            
-                                        </tr>
+                                    @foreach ($mealPricings as $pricing)
+                                        @php
+                                            $meal = $meals->firstWhere('id', $pricing->meals_id);
+                                        @endphp
+                                        @if ($meal)
+                                            <tr>
+                                                <td>{{ $meal->title }}</td>
+                                                <td>USD {{ $pricing->sgl }}</td>
+                                                <td>USD {{ $pricing->dbl }}</td>
+                                                <td>USD {{ $pricing->tpl }}</td>
+                                                <td>USD {{ $pricing->Quartable }}</td>
+                                                <td>USD {{ $pricing->Family }}</td>
+                                                <td>{{ $pricing->Start_date }}</td>
+                                                <td>{{ $pricing->End_date }}</td>
+                                            </tr>
+                                        @endif
                                     @endforeach
                                 </tbody>
                             </table>
-                        </div>
-
+                        @else
+                            <p>No meal pricing information available.</p>
+                        @endif
+                        <hr>
+                        @if ($mealPricings->count())
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Supplements</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach ($mealPricings as $pricing)
+                                    @php
+                                        $supplementPrices = json_decode($pricing->supplement_prices, true);
+                                    @endphp
+                                    @if ($supplementPrices)
+                                        @foreach ($supplementPrices as $supplement_id => $price)
+                                            @php
+                                                $supplement = $supplements->firstWhere('id', $supplement_id);
+                                            @endphp
+                                            @if ($supplement)
+                                                <tr>
+                                                    <td>
+                                                        <div class="mb-2">
+                                                            <input type="text" value="{{ $supplement->title }}: USD - {{ $price }}" disabled class="form-control">
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            @endif
+                                        @endforeach
+                                    @else
+                                        {{-- <tr>
+                                            <td>No supplements</td>
+                                        </tr> --}}
+                                    @endif
+                                @endforeach
+                            </tbody>
+                        </table>
+                    @else
+                        <p>No meal pricing information available.</p>
+                    @endif
+                    
                         <a href="{{ route('hotels.index') }}" class="btn btn-primary mt-3">Back</a>
                     </div>
                 </div>
             </div>
         </div>
-<!-- Modal for Adding Supplement -->
-<div class="modal" id="addSupplementModal" tabindex="-1" aria-labelledby="addSupplementModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="addSupplementModalLabel">Add Supplement</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <!-- Form to Add Supplement -->
-                <form action="{{ route('supplements.store') }}" method="POST">
+
+    <!-- Add Supplement Modal -->
+    <div class="modal fade" id="addSupplementModal" tabindex="-1" role="dialog" aria-labelledby="addSupplementModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addSupplementModalLabel">Add Supplement</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <form id="supplementForm">
                     @csrf
-                    <input type="hidden" name="hotel_id" value="{{ $hotel->id }}">
-                    <div class="mb-3">
-                        <label for="title" class="form-label">Supplement Title</label>
-                        <input type="text" class="form-control" id="title" name="title" required>
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label for="supplement_title">Title</label>
+                            <input type="text" class="form-control" id="supplement_title" name="title" required>
+                            <input type="hidden" name="hotel_id" value="{{ $hotel->id }}"> <!-- Assuming you are passing the hotel ID -->
+
+                        </div>
+                        <div id="supplementMessage" class="alert alert-success" style="display:none;"></div>
                     </div>
-                    <button type="submit" class="btn btn-primary">Save</button>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary">Save Supplement</button>
+                    </div>
                 </form>
             </div>
         </div>
     </div>
-</div>
+
+    <!-- Create Meal Modal -->
+    <div class="modal fade" id="addMealModal" tabindex="-1" role="dialog" aria-labelledby="addMealModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addMealModalLabel">Create Meal</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <form id="mealForm">
+                    @csrf
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label for="meal_title">Title</label>
+                            <input type="text" class="form-control" id="meal_title" name="title" required>
+                            <input type="hidden" name="hotel_id" value="{{ $hotel->id }}"> <!-- Assuming you are passing the hotel ID -->
+
+                        </div>
+                        <div id="mealMessage" class="alert alert-success" style="display:none;"></div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary">Save Meal</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 
 @endsection
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    // Delete Supplement
+    function deleteSupplement(id) {
+        $.ajax({
+            url: '{{ route('supplements.destroy', '') }}/' + id,
+            method: 'DELETE',
+            data: {
+                _token: '{{ csrf_token() }}'
+            },
+            success: function(response) {
+                // Handle success response
+                alert('Supplement deleted successfully.');
+                location.reload(); // Reload the page or update the UI
+            },
+            error: function(xhr, status, error) {
+                // Handle error response
+                alert('An error occurred: ' + xhr.responseText);
+            }
+        });
+    }
 
-<style>
+    // Delete Meal
+    function deleteMeal(id) {
+        $.ajax({
+            url: '{{ route('meals.destroy', '') }}/' + id,
+            method: 'DELETE',
+            data: {
+                _token: '{{ csrf_token() }}'
+            },
+            success: function(response) {
+                // Handle success response
+                alert('Meal deleted successfully.');
+                location.reload(); // Reload the page or update the UI
+            },
+            error: function(xhr, status, error) {
+                // Handle error response
+                alert('An error occurred: ' + xhr.responseText);
+            }
+        });
+    }
+
+    $(document).ready(function() {
+        // Fetch and display supplements
+        function fetchSupplements() {
+            $.ajax({
+                url: '{{ route('supplements.fetch') }}',
+                method: 'GET',
+                success: function(response) {
+                    let tableBody = $('#supplementTableBody');
+                    tableBody.empty();
+                    response.forEach(function(supplement) {
+                        tableBody.append(`
+                            <tr>
+                                <td>${supplement.title}</td>
+                                <td>
+                                    <button class="btn btn-danger btn-sm" onclick="deleteSupplement(${supplement.id})">Delete</button>
+                                </td>
+                            </tr>
+                        `);
+                    });
+                }
+            });
+        }
+
+        // Fetch and display meals
+        function fetchMeals() {
+            $.ajax({
+                url: '{{ route('meals.fetch') }}',
+                method: 'GET',
+                success: function(response) {
+                    let tableBody = $('#mealTableBody');
+                    tableBody.empty();
+                    response.forEach(function(meal) {
+                        tableBody.append(`
+                            <tr>
+                                <td>${meal.title}</td>
+                                <td>
+                                    <button class="btn btn-danger btn-sm" onclick="deleteMeal(${meal.id})">Delete</button>
+                                </td>
+                            </tr>
+                        `);
+                    });
+                }
+            });
+        }
+
+        // Fetch data on page load
+        fetchSupplements();
+        fetchMeals();
+
+        // Handle Supplement Form Submission
+        $('#supplementForm').on('submit', function(e) {
+            e.preventDefault();
+            $.ajax({
+                url: '{{ route('supplements.store') }}',
+                method: 'POST',
+                data: $(this).serialize(),
+                success: function(response) {
+                    $('#supplementMessage').text(response.success).show();
+                    $('#addSupplementModal').modal('hide');
+                    $('#supplementForm')[0].reset();
+                    fetchSupplements(); // Refresh supplements list
+                },
+                error: function(xhr) {
+                    $('#supplementMessage').text('An error occurred').show();
+                }
+            });
+        });
+
+        // Handle Meal Form Submission
+        $('#mealForm').on('submit', function(e) {
+            e.preventDefault();
+            $.ajax({
+                url: '{{ route('meals.store') }}',
+                method: 'POST',
+                data: $(this).serialize(),
+                success: function(response) {
+                    $('#mealMessage').text(response.success).show();
+                    $('#addMealModal').modal('hide');
+                    $('#mealForm')[0].reset();
+                    fetchMeals(); // Refresh meals list
+                },
+                error: function(xhr) {
+                    $('#mealMessage').text('An error occurred').show();
+                }
+            });
+        });
+    });
+</script>
+
+{{-- <style>
     .card {
         box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     }
@@ -199,4 +428,50 @@
     .text-right button {
         margin-left: 0.5rem;
     }
-</style>
+          /* Style for the modal background */
+          .modal {
+            display: none; /* Hidden by default */
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgb(0,0,0); /* Fallback color */
+            background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+        }
+
+        /* Style for the modal content */
+        .modal-content {
+            background-color: #fefefe;
+            margin: 5% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%; /* Could be more or less, depending on screen size */
+            height: 80vh; /* Full-height */
+            position: relative;
+        }
+
+        /* Style for the iframe */
+        .modal-content iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        /* Close button */
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+</style> --}}

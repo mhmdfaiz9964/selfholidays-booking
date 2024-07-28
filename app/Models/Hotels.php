@@ -24,6 +24,10 @@ class Hotels extends Model
         'pdf_urls',
     ];
 
+    protected $casts = [
+        'pdf_urls' => 'array',
+    ];
+
     // Relationships
     public function location()
     {
@@ -40,19 +44,18 @@ class Hotels extends Model
         return $this->belongsToMany(RoomCategory::class, 'hotel_room_category', 'hotel_id', 'room_category_id');
     }
 
-    public function hotelHasPricing()
+    public function meals()
     {
-        return $this->hasMany(HotelHasPricing::class, 'hotel_id');
+        return $this->hasMany(Meal::class, 'hotel_id');
     }
 
-public function supplements()
-{
-    return $this->belongsToMany(Supplement::class, 'hotel_has_supplement', 'hotel_id', 'supplement_id');
-}
-
-    public function pricingHasSupplements()
+    public function supplements()
     {
-        return $this->hasMany(PricingHasSupplements::class, 'supplements_id');
+        return $this->hasMany(Supplement::class, 'hotel_id');
     }
-    
+
+    public function pricings()
+    {
+        return $this->hasMany(Pricing::class, 'hotel_id');
+    }
 }
