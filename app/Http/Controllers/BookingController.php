@@ -60,96 +60,83 @@ class BookingController extends Controller
     {
         // Get related pricings for the hotel
         $pricings = $hotel->pricings; // This should be a collection or empty
-    
-        // Optionally, get all supplements
+        
+        // Get all supplements
         $supplements = Supplement::all(); // This should be a collection or empty
+    
+        // Get related meals for the hotel
+        $meals = $hotel->meals;
     
         // Get related room categories for the hotel
         $roomCategories = $hotel->roomCategories; // This should be a collection or empty
     
-        return view('frontend.hotel-details', compact('hotel', 'pricings', 'supplements', 'roomCategories'));
+        return view('frontend.hotel-details', compact('hotel', 'pricings', 'meals', 'supplements', 'roomCategories'));
     }
     public function store(Request $request)
     {
-        $request->validate([
+        $validated = $request->validate([
             'hotel_id' => 'required|exists:hotels,id',
-            'full_name' => 'required|string|max:255',
+            'meal_id' => 'required|exists:meals,id',
+            'room_type' => 'required|string',
+            'supplements' => 'required|string',
+            'total_price' => 'required|numeric',
+            'full_name' => 'required|string',
             'email' => 'required|email',
-            'phone' => 'required|string|max:20',
-            'room_type' => 'required|exists:room_categories,id',
-            'number_of_children' => 'nullable|integer|min:0',
-            'number_of_adults' => 'required|integer|min:1',
+            'mobile' => 'required|string',
+            'checkin_date' => 'required|date',
+            'checkout_date' => 'required|date',
+            'adults' => 'required|integer',
+            'children' => 'nullable|integer',
+            'notes' => 'nullable|string',
+        ]);
+    
+        Booking::create($validated);
+    
+        return response()->json(['message' => 'Booking confirmed!']);
+    }
+    
+    public function calculatePrice(Request $request)
+    {
+        // Validate the request
+        $request->validate([
+            'meals_id' => 'required|exists:meals,id',
+            'room_type' => 'required|in:sgl,dbl,tpl,Quartable,Family',
             'supplements' => 'nullable|array',
             'supplements.*' => 'exists:supplements,id',
-            'checkin_date' => 'required|date|after_or_equal:today',
-            'checkout_date' => 'required|date|after:checkin_date',
-            'message' => 'nullable|string',
         ]);
 
-        // Fetch the selected room category
-        $roomCategory = RoomCategory::find($request->room_type);
+        // Get meal pricing details
+        $mealId = $request->input('meals_id');
+        $roomType = $request->input('room_type');
+        $selectedSupplementIds = $request->input('supplements', []);
 
-        if (!$roomCategory) {
-            return back()->withErrors(['room_type' => 'Selected room type is not valid.']);
+        // Fetch the meal pricing for the selected meal
+        $pricing = Pricing::where('meals_id', $mealId)->first();
+
+        if (!$pricing) {
+            return response()->json(['error' => 'Pricing not found for the selected meal.'], 404);
         }
 
-        // Fetch selected supplements
-        $supplementIds = $request->input('supplements', []);
-        $supplements = Supplement::whereIn('id', $supplementIds)->get();
-        $supplementTotal = $supplements->sum('price');
+        // Get the price for the selected room type
+        $roomTypePrice = $pricing[$roomType] ?? 0;
 
-        // Calculate the total price
-        $numberOfDays = (new \DateTime($request->checkout_date))->diff(new \DateTime($request->checkin_date))->days;
-        $roomCategoryPrice = $roomCategory->price_per_night; // Assuming price_per_night is a field in RoomCategory
-        $totalPrice = ($roomCategoryPrice + $supplementTotal) * $numberOfDays;
+        // Get the price for selected supplements
+        $totalSupplementPrice = 0;
+        if (!empty($selectedSupplementIds)) {
+            $supplements = Supplement::whereIn('id', $selectedSupplementIds)->get();
+            foreach ($supplements as $supplement) {
+                $totalSupplementPrice += $supplement->price;
+            }
+        }
 
-        // Create the booking
-        $booking = Booking::create([
-            'hotel_id' => $request->hotel_id,
-            'full_name' => $request->full_name,
-            'email' => $request->email,
-            'phone' => $request->phone,
-            'room_type_id' => $request->room_type,
-            'number_of_children' => $request->number_of_children,
-            'number_of_adults' => $request->number_of_adults,
-            'supplements' => json_encode($supplementIds),
-            'checkin_date' => $request->checkin_date,
-            'checkout_date' => $request->checkout_date,
-            'price' => $totalPrice,
-            'message' => $request->message,
+        // Calculate total price
+        $totalPrice = $roomTypePrice + $totalSupplementPrice;
+
+        return response()->json([
+            'room_type_price' => $roomTypePrice,
+            'supplement_price' => $totalSupplementPrice,
+            'total_price' => $totalPrice,
         ]);
-
-        return redirect()->route('booking.success')->with('success', 'Booking created successfully.');
     }
-
-    public function calculatePrice(Request $request)
-{
-    $request->validate([
-        'room_type' => 'required|exists:room_categories,id',
-        'checkin_date' => 'required|date|after_or_equal:today',
-        'checkout_date' => 'required|date|after:checkin_date',
-        'supplements' => 'nullable|array',
-        'supplements.*' => 'exists:supplements,id',
-    ]);
-
-    // Fetch the selected room category
-    $roomCategory = RoomCategory::find($request->room_type);
-
-    if (!$roomCategory) {
-        return response()->json(['error' => 'Selected room type is not valid.'], 400);
-    }
-
-    // Fetch selected supplements
-    $supplementIds = $request->input('supplements', []);
-    $supplements = Supplement::whereIn('id', $supplementIds)->get();
-    $supplementTotal = $supplements->sum('price');
-
-    // Calculate the total price
-    $numberOfDays = (new \DateTime($request->checkout_date))->diff(new \DateTime($request->checkin_date))->days;
-    $roomCategoryPrice = $roomCategory->price_per_night; // Assuming price_per_night is a field in RoomCategory
-    $totalPrice = ($roomCategoryPrice + $supplementTotal) * $numberOfDays;
-
-    return response()->json(['total_price' => $totalPrice]);
-}
 
 }

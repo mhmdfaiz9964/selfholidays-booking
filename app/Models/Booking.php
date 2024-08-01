@@ -11,38 +11,37 @@ class Booking extends Model
 
     protected $fillable = [
         'hotel_id',
+        'meal_ids',
+        'supplement_ids',
+        'price',
         'full_name',
         'email',
-        'phone',
-        'room_type_id',
-        'number_of_children',
-        'number_of_adults',
-        'supplements',
-        'meals',
+        'mobile',
         'checkin_date',
         'checkout_date',
-        'price',
-        'message',
+        'adults',
+        'children',
+        'notes',
     ];
 
     protected $casts = [
-        'supplements' => 'array',
-        'meals' => 'array',
+        'meal_ids' => 'array',
+        'supplement_ids' => 'array',
     ];
 
-    /**
-     * Get the hotel associated with the booking.
-     */
+    // Relationships
     public function hotel()
     {
         return $this->belongsTo(Hotel::class);
     }
 
-    /**
-     * Get the room category associated with the booking.
-     */
-    public function roomCategory()
+    public function meals()
     {
-        return $this->belongsTo(RoomCategory::class, 'room_type_id');
+        return $this->belongsToMany(Meal::class, 'meal_ids', 'id', 'meal_id');
+    }
+
+    public function supplements()
+    {
+        return $this->belongsToMany(Supplement::class, 'supplement_ids', 'id', 'supplement_id');
     }
 }

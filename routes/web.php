@@ -72,3 +72,4 @@ Route::put('/hotels/{hotelId}/pricing/{pricingId}', [RoomPricingController::clas
 Route::get('/hotel/{hotel}/booking', [BookingController::class, 'show'])->name('hotel.show');
 Route::post('/booking', [BookingController::class, 'store'])->name('booking.store');
 Route::get('/hotel/pdf/{id}', [HotelController::class, 'viewPdf'])->name('hotel.pdf');
+Route::post('/calculate-price', [BookingController::class, 'calculatePrice'])->name('api.calculatePrice');

@@ -50,120 +50,234 @@
     <!-- Booking Form -->
     <div class="bg-white p-8 rounded-lg shadow-lg">
         <h2 class="text-3xl font-bold text-blue-700 mb-6">Book Your Stay</h2>
-        <form action="{{ route('booking.store') }}" method="POST">
-            @csrf
-
-            <!-- Full Name -->
-            <div class="mb-6">
-                <label for="full_name" class="block text-gray-700 text-sm font-medium mb-2">
-                    <i class="fas fa-user text-blue-500 mr-2"></i> Full Name
-                </label>
-                <input type="text" id="full_name" name="full_name" placeholder="Enter your full name" class="form-input w-full border-gray-300 rounded-lg shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50" required>
-            </div>
-
-            <!-- Email -->
-            <div class="mb-6">
-                <label for="email" class="block text-gray-700 text-sm font-medium mb-2">
-                    <i class="fas fa-envelope text-blue-500 mr-2"></i> Email Address
-                </label>
-                <input type="email" id="email" name="email" placeholder="Enter your email address" class="form-input w-full border-gray-300 rounded-lg shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50" required>
-            </div>
-
-            <!-- Phone Number -->
-            <div class="mb-6">
-                <label for="phone_number" class="block text-gray-700 text-sm font-medium mb-2">
-                    <i class="fas fa-phone text-blue-500 mr-2"></i> Phone Number
-                </label>
-                <input type="tel" id="phone_number" name="phone_number" placeholder="Enter your phone number" class="form-input w-full border-gray-300 rounded-lg shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50" required>
-            </div>
-
-            <!-- Hotel Name (Disabled) -->
-            <div class="mb-6">
-                <label for="hotel_name" class="block text-gray-700 text-sm font-medium mb-2">
-                    <i class="fas fa-hotel text-blue-500 mr-2"></i> Hotel Name
-                </label>
-                <input type="text" id="hotel_name" value="{{ $hotel->name }}" class="form-input w-full border-gray-300 rounded-lg shadow-sm bg-gray-100 text-gray-500 cursor-not-allowed" disabled>
-            </div>
-
-            <!-- Room Type -->
-            <div class="mb-4 flex items-center">
-                <i class="fas fa-bed text-gray-600 mr-2"></i>
-                <select id="room_type" name="room_type" class="form-select w-full">
-                    @foreach($roomCategories as $category)
-                        <option value="{{ $category->id }}">{{ $category->title }}</option>
-                    @endforeach
-                </select>
-            </div>
-
-            <!-- Number of Children -->
-            <div class="mb-6">
-                <label for="children" class="block text-gray-700 text-sm font-medium mb-2">
-                    <i class="fas fa-child text-blue-500 mr-2"></i> Number of Children
-                </label>
-                <input type="number" id="children" name="children" placeholder="Enter number of children" class="form-input w-full border-gray-300 rounded-lg shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50" min="0" value="0">
-            </div>
-
-            <!-- Number of Adults -->
-            <div class="mb-6">
-                <label for="adults" class="block text-gray-700 text-sm font-medium mb-2">
-                    <i class="fas fa-user-plus text-blue-500 mr-2"></i> Number of Adults
-                </label>
-                <input type="number" id="adults" name="adults" placeholder="Enter number of adults" class="form-input w-full border-gray-300 rounded-lg shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50" min="1" value="1">
-            </div>
-
-            <!-- Supplements -->
-            <div class="mb-4">
-                <h3 class="text-lg font-bold mb-2">Select Supplements</h3>
-                @foreach($supplements as $supplement)
-                    <div class="flex items-center mb-2">
-                        <input type="checkbox" name="supplements[]" value="{{ $supplement->id }}" id="supplement-{{ $supplement->id }}" class="mr-2">
-                        <label for="supplement-{{ $supplement->id }}" class="text-gray-700">{{ $supplement->title }} - ${{ $supplement->price }}</label>
-                    </div>
+        <div class="mb-4">
+            <label for="room_type" class="block text-sm font-medium text-gray-700">Room Type</label>
+            <select id="room_type" name="room_type" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                <option value="sgl">Single</option>
+                <option value="dbl">Double</option>
+                <option value="tpl">Triple</option>
+                <option value="Quartable">Quartable</option>
+                <option value="Family">Family</option>
+            </select>
+        </div>
+        
+        <div class="mb-4">
+            <label for="meal_type" class="block text-sm font-medium text-gray-700">Meal Type</label>
+            <select id="meal_type" name="meal_type" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                @foreach($meals as $meal)
+                    <option value="{{ $meal->id }}">{{ $meal->title }}</option>
                 @endforeach
-            </div>
-            <div id="total_price" class="mb-4 text-lg font-bold">Total Price: $0.00</div>
+            </select>
+        </div>
+        
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Supplement
+                    </th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Price
+                    </th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+                @foreach ($pricings as $pricing) <!-- Use $pricings instead of $mealPricings -->
+                    @php
+                        $supplementPrices = json_decode($pricing->supplement_prices, true);
+                    @endphp
+                    @if ($supplementPrices)
+                        @foreach ($supplementPrices as $supplement_id => $price)
+                            @php
+                                $supplement = $supplements->firstWhere('id', $supplement_id);
+                            @endphp
+                            @if ($supplement)
+                                <tr>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        {{ $supplement->title }}
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        USD {{ number_format($price, 2) }}
+                                    </td>
+                                </tr>
+                            @endif
+                        @endforeach
+                    @else
+                        {{-- <tr>
+                            <td colspan="2" class="px-6 py-4 text-center text-gray-500">
+                                No supplements available
+                            </td>
+                        </tr> --}}
+                    @endif
+                @endforeach
+            </tbody>
+        </table>
+        
+        
+        <div id="total_price" class="mb-4">
+            <div id="totalPrice">Total Price: USD 0</div>
+        </div>
+        <!-- Book Now Button -->
+    <button id="bookNowButton" type="button" class="mt-6 bg-blue-500 text-white px-4 py-2 rounded-md shadow-sm hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500">
+        Book Now
+    </button>
 
-
-            <!-- Submit Button -->
-            <button type="submit" class="bg-blue-600 text-white px-6 py-3 rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50">Submit Booking</button>
-        </form>
+        
     </div>
 </div>
+<!-- Booking Modal -->
+<div id="bookingModal" class="fixed inset-0 z-50 flex items-center justify-center hidden bg-gray-900 bg-opacity-50">
+    <div class="bg-white p-8 rounded-lg shadow-lg max-w-md w-full">
+        <h2 class="text-2xl font-bold text-blue-700 mb-4">Booking Details</h2>
+        <div id="bookingDetails" class="mb-4">
+            <form id="bookingForm">
+                <div class="mb-4">
+                    <label for="full_name" class="block text-sm font-medium text-gray-700">Full Name</label>
+                    <input type="text" id="full_name" name="full_name" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" required>
+                </div>
+                <div class="mb-4">
+                    <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
+                    <input type="email" id="email" name="email" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" required>
+                </div>
+                <div class="mb-4">
+                    <label for="mobile" class="block text-sm font-medium text-gray-700">Mobile</label>
+                    <input type="text" id="mobile" name="mobile" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" required>
+                </div>
+                <div class="mb-4">
+                    <label for="checkin_date" class="block text-sm font-medium text-gray-700">Check-in Date</label>
+                    <input type="date" id="checkin_date" name="checkin_date" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" required>
+                </div>
+                <div class="mb-4">
+                    <label for="checkout_date" class="block text-sm font-medium text-gray-700">Check-out Date</label>
+                    <input type="date" id="checkout_date" name="checkout_date" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" required>
+                </div>
+                <div class="mb-4">
+                    <label for="adults" class="block text-sm font-medium text-gray-700">Adults</label>
+                    <input type="number" id="adults" name="adults" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" required>
+                </div>
+                <div class="mb-4">
+                    <label for="children" class="block text-sm font-medium text-gray-700">Children</label>
+                    <input type="number" id="children" name="children" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                </div>
+                <div class="mb-4">
+                    <label for="notes" class="block text-sm font-medium text-gray-700">Notes</label>
+                    <textarea id="notes" name="notes" rows="4" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"></textarea>
+                </div>
+                <input type="hidden" id="hotel_id" name="hotel_id">
+                <input type="hidden" id="meal_id" name="meal_id">
+                <input type="hidden" id="room_type" name="room_type">
+                <input type="hidden" id="supplements" name="supplements">
+                <input type="hidden" id="total_price" name="total_price">
+                <div class="flex justify-end">
+                    <button type="button" id="submitBookingButton" class="bg-green-500 text-white px-4 py-2 rounded-md shadow-sm hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500">
+                        Submit Booking
+                    </button>
+                </div>
+            </form>
+        </div>
+        <div class="flex justify-end">
+            <button id="closeModalButton" type="button" class="bg-red-500 text-white px-4 py-2 rounded-md shadow-sm hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500">
+                Close
+            </button>
+        </div>
+    </div>
+</div>
+
+
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-
 <script>
-$(document).ready(function() {
-    function calculatePrice() {
-        var roomType = $('#room_type').val();
-        var checkinDate = $('#checkin_date').val();
-        var checkoutDate = $('#checkout_date').val();
-        var supplements = [];
+    document.addEventListener('DOMContentLoaded', function() {
+        const roomTypeSelect = document.getElementById('room_type');
+        const mealTypeSelect = document.getElementById('meal_type');
+        const supplementCheckboxes = document.querySelectorAll('input[name="supplements[]"]');
+        const totalPriceElement = document.getElementById('totalPrice');
+        const bookNowButton = document.getElementById('bookNowButton');
+        const bookingModal = document.getElementById('bookingModal');
+        const closeModalButton = document.getElementById('closeModalButton');
+        const bookingDetails = document.getElementById('bookingDetails');
+        const bookingForm = document.getElementById('bookingForm');
         
-        $('input[name="supplements[]"]:checked').each(function() {
-            supplements.push($(this).val());
-        });
-
-        $.ajax({
-            url: '{{ route('calculate.price') }}',
-            type: 'POST',
-            data: {
-                _token: '{{ csrf_token() }}',
-                room_type: roomType,
-                checkin_date: checkinDate,
-                checkout_date: checkoutDate,
-                supplements: supplements
-            },
-            success: function(response) {
-                $('#total_price').text('Total Price: $' + response.total_price.toFixed(2));
-            },
-            error: function(response) {
-                $('#total_price').text('Error calculating price.');
-            }
-        });
-    }
-
-    $('#room_type, #checkin_date, #checkout_date').change(calculatePrice);
-    $('input[name="supplements[]"]').change(calculatePrice);
-});
-</script>
+        // Function to calculate price
+        function calculatePrice() {
+            const mealId = mealTypeSelect.value;
+            const roomType = roomTypeSelect.value;
+            const supplements = Array.from(supplementCheckboxes)
+                .filter(cb => cb.checked)
+                .map(cb => cb.value);
+    
+            $.ajax({
+                url: '{{ route('api.calculatePrice') }}',
+                method: 'POST',
+                data: {
+                    meals_id: mealId,
+                    room_type: roomType,
+                    supplements: supplements,
+                    _token: '{{ csrf_token() }}',
+                },
+                success: function(response) {
+                    totalPriceElement.textContent = 'Total Price: USD ' + response.total_price;
+                    // Store booking details in data attributes
+                    bookNowButton.dataset.mealId = mealId;
+                    bookNowButton.dataset.roomType = roomType;
+                    bookNowButton.dataset.supplements = supplements.join(',');
+                    bookNowButton.dataset.totalPrice = response.total_price;
+                },
+                error: function(xhr) {
+                    console.error('Error calculating price:', xhr.responseText);
+                }
+            });
+        }
+    
+        // Function to open modal
+        function openModal() {
+            const mealId = bookNowButton.dataset.mealId;
+            const roomType = bookNowButton.dataset.roomType;
+            const supplements = bookNowButton.dataset.supplements.split(',');
+            const totalPrice = bookNowButton.dataset.totalPrice;
+    
+            bookingDetails.innerHTML = `
+                <p><strong>Hotel ID:</strong> {{ $hotel->id }}</p>
+                <p><strong>Meal ID:</strong> ${mealId}</p>
+                <p><strong>Room Type:</strong> ${roomType}</p>
+                <p><strong>Supplements:</strong> ${supplements.join(', ')}</p>
+                <p><strong>Total Price:</strong> USD ${totalPrice}</p>
+            `;
+    
+            bookingModal.classList.remove('hidden');
+        }
+    
+        // Function to close modal
+        function closeModal() {
+            bookingModal.classList.add('hidden');
+        }
+    
+        // Function to submit booking
+        function submitBooking() {
+            const formData = new FormData(bookingForm);
+    
+            $.ajax({
+                url: '{{ route('booking.store') }}',
+                method: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function(response) {
+                    alert('Booking confirmed!');
+                    closeModal();
+                },
+                error: function(xhr) {
+                    console.error('Error submitting booking:', xhr.responseText);
+                }
+            });
+        }
+    
+        // Add event listeners
+        roomTypeSelect.addEventListener('change', calculatePrice);
+        mealTypeSelect.addEventListener('change', calculatePrice);
+        supplementCheckboxes.forEach(cb => cb.addEventListener('change', calculatePrice));
+        bookNowButton.addEventListener('click', openModal);
+        closeModalButton.addEventListener('click', closeModal);
+        document.getElementById('submitBookingButton').addEventListener('click', submitBooking);
+    });
+    </script>
 @endsection
